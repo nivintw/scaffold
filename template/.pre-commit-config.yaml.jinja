@@ -65,6 +65,45 @@ repos:
         name: "🐚 shell · Lint shell scripts with shellcheck"
         args: ["-s", "bash", "-x"]
 
+  - repo: https://github.com/maxwinterstein/shfmt-py
+    rev: v4.0.0
+    hooks:
+      - id: shfmt
+        name: "🐚 shell · Format shell scripts with shfmt"
+        # -i 2 matches .editorconfig (indent_size = 2).
+        args: ["-w", "-i", "2"]
+{%- if 'bats' in test_frameworks %}
+        # bats files are identified as shell but use `@test` syntax shfmt can't parse;
+        # exclude them (shellcheck still lints them via its own hook). Only emitted for the
+        # bats shape — otherwise check-useless-excludes flags an exclude matching no files.
+        exclude: '\.bats$'
+{%- endif %}
+
+  # ----------------------------- ⚙️ GitHub Actions ---------------------------------- #
+  # actionlint lints the workflows (and shellchecks their `run:` blocks); zizmor security-
+  # audits them. Both are pip-backed hooks that self-bootstrap a pinned env — no system
+  # binary, so they run identically locally and in CI.
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.24
+    hooks:
+      - id: actionlint
+        name: "⚙️ ci · Lint workflows with actionlint"
+        # shellcheck-py puts a shellcheck on PATH so actionlint can lint `run:` blocks
+        # without depending on a system install.
+        additional_dependencies: ["shellcheck-py"]
+
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor
+        name: "🔒 ci · Audit workflows for security issues (zizmor)"
+        # --offline keeps the gate deterministic and token-free: the AST audits (template
+        # injection, excessive permissions, artipacked, …) run offline, while the network
+        # audits (known-vulnerable-actions, ref-confusion) need a GH token and are skipped
+        # here — run zizmor online in CI for those. Overriding args drops the upstream
+        # default, so re-add --no-progress.
+        args: ["--no-progress", "--offline"]
+
   # ------------------------------- 🔒 Security -------------------------------------- #
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1

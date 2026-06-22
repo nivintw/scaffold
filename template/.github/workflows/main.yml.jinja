@@ -45,21 +45,27 @@ jobs:
     steps:
       - name: Mint a token for the release App (the ruleset bypass actor)
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
         with:
           app-id: ${{ secrets.CI_APP_ID }}
           private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          # Scope the token to the minimum the release needs (signed bump commit, tag, ref,
+          # release) instead of inheriting the App's blanket perms (zizmor github-app).
+          permission-contents: write
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # Check out the LIVE main tip, not the triggering push SHA, so a prior
           # release run's bump is seen rather than targeting a stale head.
           ref: main
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
+          # Bump/tag/release go through the API with this token, not `git push`, so the
+          # token needn't be persisted to .git/config (zizmor artipacked).
+          persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
 
@@ -95,7 +101,7 @@ jobs:
 
       - name: Create the signed bump commit + annotated tag
         if: steps.bump.outputs.released == 'true'
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           OLD: ${{ steps.bump.outputs.old }}
           NEW: ${{ steps.bump.outputs.new }}
@@ -137,8 +143,11 @@ jobs:
         if: steps.bump.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          # Route the step output through env, not `${{ }}` in the script, so it can't be
+          # interpreted as shell (zizmor template-injection).
+          TAG: ${{ steps.bump.outputs.tag }}
         run: |
-          gh release create "${{ steps.bump.outputs.tag }}" \
-            --title "${{ steps.bump.outputs.tag }}" \
+          gh release create "$TAG" \
+            --title "$TAG" \
             --notes-file "$RUNNER_TEMP/release_notes.md"
 {% endraw %}
