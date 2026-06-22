@@ -23,7 +23,7 @@ SRC="$WORK/src"
 rsync -a --exclude '.git' --exclude '.venv' "$REPO_ROOT/" "$SRC/"
 
 missing=()
-for tool in copier uv uvx reuse hawkeye taplo bats git rsync; do
+for tool in copier uv uvx reuse hawkeye taplo bats git rsync trivy osv-scanner; do
   command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
 done
 if [ "${#missing[@]}" -gt 0 ]; then
@@ -59,6 +59,14 @@ for answers in "$ANSWERS_DIR"/*.yml; do
   if [ -z "$(cd "$out" && git diff --cached --name-only)" ]; then
     echo "    ❌ nothing staged — render/staging produced no files"
     total_fail=$((total_fail + 1)); continue
+  fi
+
+  # For Python shapes, materialize uv.lock the way a real generated repo does (its `_tasks`
+  # run `uv sync` before the first commit) and stage it, so the gate runs against a realistic
+  # tree. In particular the osv-scanner hook keys off a committed uv.lock.
+  if [ -f "$out/pyproject.toml" ]; then
+    run "uv lock" "$out" uv lock
+    (cd "$out" && git add -A)
   fi
 
   # Always: licensing + TOML formatting (system tools; prek skips them so they run here).

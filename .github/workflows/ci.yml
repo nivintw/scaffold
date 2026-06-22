@@ -61,6 +61,22 @@ jobs:
           test -s "$HOME/.local/bin/hawkeye" && "$HOME/.local/bin/hawkeye" --help >/dev/null
           test -s "$HOME/.local/bin/taplo" && "$HOME/.local/bin/taplo" --version >/dev/null
 
+      - name: Install trivy + osv-scanner (terraform IaC + dependency CVE scans)
+        env:
+          # renovate: datasource=github-releases depName=aquasecurity/trivy
+          TRIVY_VERSION: "0.71.2"
+          # renovate: datasource=github-releases depName=google/osv-scanner
+          OSV_VERSION: "2.4.0"
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+            | tar -xz -C "$HOME/.local/bin" trivy
+          curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64" \
+            -o "$HOME/.local/bin/osv-scanner"
+          chmod +x "$HOME/.local/bin/trivy" "$HOME/.local/bin/osv-scanner"
+          test -s "$HOME/.local/bin/trivy" && "$HOME/.local/bin/trivy" --version >/dev/null
+          test -s "$HOME/.local/bin/osv-scanner" && "$HOME/.local/bin/osv-scanner" --version >/dev/null
+
       - name: Render every shape + run the full gate
         run: tests/render-matrix.sh
 

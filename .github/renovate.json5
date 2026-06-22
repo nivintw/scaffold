@@ -42,14 +42,34 @@
     },
     {
       "customType": "regex",
-      "description": "Pinned hawkeye/taplo release binaries fetched in CI (own workflow + the generated one)",
+      "description": "Release binaries whose version lives in the download URL (hawkeye, taplo) — own + generated workflows",
       "managerFilePatterns": [
         "/^\\.github/workflows/.+\\.ya?ml$/",
         "/^template/\\.github/workflows/.+\\.jinja$/",
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[\\s\\S]*?/releases/download/(?<currentValue>[^/]+)/",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+(?:run: \\|\\s+)?curl[^\\n]*?/releases/download/(?<currentValue>[^/]+)/",
       ],
+    },
+    {
+      "customType": "regex",
+      "description": "Release binaries whose version lives in a `# renovate:`-annotated env var (trivy, osv-scanner) — own + generated workflows",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/",
+        "/^template/\\.github/workflows/.+\\.jinja$/",
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+: \"(?<currentValue>[^\"]+)\"",
+      ],
+    },
+    {
+      "customType": "regex",
+      "description": "uv image pinned in the generated Dockerfile.jinja (Renovate's docker manager can't parse .jinja)",
+      "managerFilePatterns": ["/Dockerfile.*\\.jinja$/"],
+      "matchStrings": [
+        "COPY --from=(?<depName>ghcr\\.io/astral-sh/uv):(?<currentValue>\\S+) ",
+      ],
+      "datasourceTemplate": "docker",
     },
   ],
 }
