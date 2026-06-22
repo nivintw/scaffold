@@ -33,6 +33,9 @@ dev = [
   "ty>=0.0.1",
 {%- if 'pytest' in test_frameworks %}
   "pytest>=8",
+{%- if python_source %}
+  "pytest-cov>=5",
+{%- endif %}
 {%- endif %}
 ]
 
@@ -51,6 +54,10 @@ packages = ["src/{{ python_package }}"]
 {%- if 'pytest' in test_frameworks -%}
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+{%- if python_source %}
+# Coverage gate — measure the package, fail under 80%. Tune per project.
+addopts = "--cov={{ python_package }} --cov-report=term-missing --cov-fail-under=80"
+{%- endif %}
 
 {% endif -%}
 [tool.ruff]

@@ -38,7 +38,26 @@ jobs:
         with:
           path: ~/.cache/prek
           key: prek-${{ '{{' }} hashFiles('.pre-commit-config.yaml') {{ '}}' }}
-
+{% if include_terraform %}
+      - name: Install trivy (terraform IaC scan — runs inside the prek gate)
+        env:
+          # renovate: datasource=github-releases depName=aquasecurity/trivy
+          TRIVY_VERSION: "0.71.2"
+        run: |
+          curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP" trivy
+          echo "$RUNNER_TEMP" >>"$GITHUB_PATH"
+{% endif %}{% if has_python %}
+      - name: Install osv-scanner (dependency CVE scan — runs inside the prek gate)
+        env:
+          # renovate: datasource=github-releases depName=google/osv-scanner
+          OSV_VERSION: "2.4.0"
+        run: |
+          curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64" \
+            -o "$RUNNER_TEMP/osv-scanner"
+          chmod +x "$RUNNER_TEMP/osv-scanner"
+          echo "$RUNNER_TEMP" >>"$GITHUB_PATH"
+{% endif %}
       - name: Run prek hooks (same as local)
         env:
           # taplo/hawkeye run as dedicated steps below; no-commit-to-branch is a

@@ -110,7 +110,28 @@ repos:
     hooks:
       - id: gitleaks
         name: "🔒 security · Detect secrets with gitleaks"
-
+{% if has_python %}
+  # ----------------------- 🔒 Dependency CVEs (supply chain) ------------------------ #
+  # ruff `ALL` lints the *code*, not the dependency tree. `uv audit` checks the resolved
+  # deps against PyPA advisories; osv-scanner cross-checks uv.lock against the OSV database
+  # (and also handles non-Python lockfiles). Both are system tools — uv ships `audit`, and
+  # osv-scanner is a release binary (Brewfile/CI install), like hawkeye/taplo — so CI and
+  # local match.
+  - repo: local
+    hooks:
+      - id: uv-audit
+        name: "🔒 deps · Audit dependencies for CVEs (uv audit)"
+        entry: uv audit --preview-features audit-command
+        language: system
+        files: '^(pyproject\.toml|uv\.lock)$'
+        pass_filenames: false
+      - id: osv-scanner
+        name: "🔒 deps · Scan uv.lock for CVEs (osv-scanner)"
+        entry: osv-scanner scan source --lockfile uv.lock
+        language: system
+        files: '^uv\.lock$'
+        pass_filenames: false
+{% endif %}
   # --------------------------- ⚖️ Licensing & Compliance ---------------------------- #
   # hawkeye maintains the SPDX headers (config: licenserc.toml); reuse verifies overall
   # REUSE compliance. hawkeye is system (the Brewfile/release binary) so CI/local match.
@@ -138,7 +159,38 @@ repos:
         # CHECK-ONLY: drop the hook default --write-changes; keep --force-exclude.
         args: ["--force-exclude"]
         pass_filenames: false
-{% if has_python %}
+{% if include_docker %}
+  # -------------------------------- 🐳 Docker --------------------------------------- #
+  # hadolint is the Dockerfile analog of shellcheck. hadolint-py is pip-backed so it
+  # self-bootstraps (no Docker/system install needed).
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+        name: "🐳 docker · Lint Dockerfile with hadolint"
+{% endif %}{% if include_terraform %}
+  # ------------------------------- 🏗️ Terraform ------------------------------------- #
+  # `terraform fmt`/`validate` check syntax, not security — these catch misconfig (e.g. a
+  # public bucket). checkov is pip-backed (self-bootstraps); trivy is a system release
+  # binary (Brewfile/CI install), like hawkeye/taplo.
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.3.1
+    hooks:
+      - id: checkov
+        name: "🏗️ terraform · Scan IaC for misconfig (checkov)"
+        # Terraform only — zizmor audits workflows, hadolint the Dockerfile.
+        args: ["--framework", "terraform", "--quiet", "--compact"]
+
+  - repo: local
+    hooks:
+      - id: trivy
+        name: "🏗️ terraform · Scan IaC for misconfig (trivy)"
+        # --exit-code 1 makes findings fail the gate (trivy exits 0 by default).
+        entry: trivy config --exit-code 1 terraform
+        language: system
+        pass_filenames: false
+        files: '\.tf$'
+{% endif %}{% if has_python %}
   # -------------------------------- 🐍 Python --------------------------------------- #
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.17

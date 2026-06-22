@@ -20,10 +20,18 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Bump the pinned hawkeye/taplo release binaries fetched in the CI workflow.",
+      "description": "Pinned release binaries whose version lives in the download URL (hawkeye, taplo).",
       "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[\\s\\S]*?/releases/download/(?<currentValue>[^/]+)/"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+(?:run: \\|\\s+)?curl[^\\n]*?/releases/download/(?<currentValue>[^/]+)/"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Pinned release binaries whose version lives in a `# renovate:`-annotated env var (trivy, osv-scanner).",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+: \"(?<currentValue>[^\"]+)\""
       ]
     }
   ]
