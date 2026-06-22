@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": ["dependencies"],
+  "pre-commit": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Group Ruff bumps so a new rule under extend-select=ALL lands as one reviewable PR, not a surprise red.",
+      "matchManagers": ["pre-commit"],
+      "matchPackageNames": ["astral-sh/ruff-pre-commit"],
+      "groupName": "ruff"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Bump the pinned hawkeye/taplo release binaries fetched in the CI workflow.",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[\\s\\S]*?/releases/download/(?<currentValue>[^/]+)/"
+      ]
+    }
+  ]
+}

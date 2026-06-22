@@ -23,10 +23,12 @@ jobs:
   render-matrix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Set up uv (+ managed Python)
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
 
@@ -43,13 +45,15 @@ jobs:
           sudo apt-get install -y -qq bats
 
       - name: Install helm (for the full-modules shape's helm lint)
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
       - name: Install hawkeye + taplo (pinned, matching the template's CI)
         run: |
           set -euo pipefail
+          # renovate: datasource=github-releases depName=korandoru/hawkeye
           curl -fsSL https://github.com/korandoru/hawkeye/releases/download/v6.5.1/hawkeye-x86_64-unknown-linux-gnu.tar.xz \
             | tar -xJ --strip-components=1 -C "$HOME/.local/bin" hawkeye-x86_64-unknown-linux-gnu/hawkeye
+          # renovate: datasource=github-releases depName=tamasfe/taplo
           curl -fsSL https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz \
             | gunzip -c >"$HOME/.local/bin/taplo"
           chmod +x "$HOME/.local/bin/hawkeye" "$HOME/.local/bin/taplo"
@@ -59,3 +63,25 @@ jobs:
 
       - name: Render every shape + run the full gate
         run: tests/render-matrix.sh
+
+  # Lint + security-audit the template repo's OWN workflow(s). The GENERATED workflows are
+  # covered by render-matrix (actionlint/zizmor run as prek hooks on each rendered shape);
+  # this job is the dogfood for this very file. Same pinned tools, via uvx — no Docker.
+  lint-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+
+      - name: Lint workflows (actionlint)
+        # shellcheck-py gives actionlint a shellcheck for `run:` blocks without a system install.
+        run: uvx --from actionlint-py==1.7.12.24 --with shellcheck-py actionlint
+
+      - name: Audit workflows (zizmor — online, full coverage)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uvx zizmor@1.26.1 --no-progress .github/workflows
