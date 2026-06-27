@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: © 2026 Tyler Nivin
+# SPDX-License-Identifier: MIT
+
+# commitizen config — its ONLY job here is the commit-msg hook: enforcing plain
+# Conventional Commits. Releases are release-please's job (release-please-config.json +
+# .release-please-manifest.json; see .github/workflows/release-please.yml), so no
+# version-of-record / bump / tag config lives here — `name` is all the linter needs.
+#
+# Plain conventional (NOT gitmoji): release-please derives version bumps from commit types
+# and cannot parse a leading emoji, so commits must start with the bare type. The hook also
+# rejects a leading emoji, so a stray one can't silently slip past a release.
+
+[tool.commitizen]
+name = "cz_conventional_commits"

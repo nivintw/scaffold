@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: © 2026 Tyler Nivin
+# SPDX-License-Identifier: MIT
+
+# typos config for the scaffold template repo ITSELF (CHECK-ONLY; the hook drops
+# --write-changes). The generated projects get their own template/_typos.toml.jinja.
+
+[files]
+# template/ is Copier source, validated post-render by tests/render-matrix.sh (which runs
+# typos on each rendered shape); don't lint the raw .jinja here.
+extend-exclude = ["template/"]
+
+[default.extend-words]
+# "vertica" is a SQL dialect offered in copier.yml's choices, not a typo of "vertical".
+vertica = "vertica"
