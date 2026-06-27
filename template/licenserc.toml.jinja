@@ -21,6 +21,8 @@ SPDX-License-Identifier: {{ '{{' }} props["spdxLicenseIdentifier"] {{ '}}' }}
 # Jekyll/Hugo), so markdown stays in hawkeye's default excludes (a line-1 SPDX comment
 # would break the frontmatter) and is licensed via REUSE.toml instead. Note hawkeye
 # can't re-exclude a file once an include (`!`) matches it, so there's no `!**/*.md`.
+# For the same reason the markdown-header mapping (additionalHeaders + MARKDOWN_CUSTOM)
+# is omitted below — it would never fire — and markdown-header.toml isn't shipped.
 {%- endif %}
 excludes = [
   "LICENSE",
@@ -44,12 +46,12 @@ excludes = [
   "**/.sqlfluff",
 {%- endif %}
 ]
-
+{% if not markdown_has_frontmatter %}
 additionalHeaders = ["markdown-header.toml"]
 
 [mapping.MARKDOWN_CUSTOM]
 extensions = ["md"]
-
+{% endif %}
 # '#'-comment files hawkeye doesn't map by default.
 [mapping.SCRIPT_STYLE]
 extensions = ["txt", "fish", "bats"{% if include_terraform %}, "tf"{% endif %}]
