@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/nivintw/scaffold/compare/v1.0.1...v1.0.2) (2026-06-27)
+
+
+### Bug Fixes
+
+* Omit dead markdown-header licenserc config under frontmatter ([c2bcdb8](https://github.com/nivintw/scaffold/commit/c2bcdb804f323648262af013feb600d6836e3db2)), closes [#28](https://github.com/nivintw/scaffold/issues/28)
+
 ## [1.0.1](https://github.com/nivintw/scaffold/compare/v1.0.0...v1.0.1) (2026-06-27)
 
 
