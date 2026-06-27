@@ -33,11 +33,13 @@ fi
 
 total_fail=0
 run() { # label, dir, cmd...
-  local label="$1" dir="$2"; shift 2
+  local label="$1" dir="$2"
+  shift 2
   if (cd "$dir" && "$@" >"$WORK/out.log" 2>&1); then
     echo "    ✅ $label"
   else
-    echo "    ❌ $label"; sed 's/^/        /' "$WORK/out.log" | tail -15
+    echo "    ❌ $label"
+    sed 's/^/        /' "$WORK/out.log" | tail -15
     total_fail=$((total_fail + 1))
   fi
 }
@@ -48,40 +50,46 @@ for answers in "$ANSWERS_DIR"/*.yml; do
   out="$WORK/render/$name"
   echo "═══ shape: $name ═══"
   if ! copier copy --defaults --data-file "$answers" --skip-tasks "$SRC" "$out" >"$WORK/render.log" 2>&1; then
-    echo "    ❌ render FAILED"; tail -15 "$WORK/render.log"; total_fail=$((total_fail + 1)); continue
+    echo "    ❌ render FAILED"
+    tail -15 "$WORK/render.log"
+    total_fail=$((total_fail + 1))
+    continue
   fi
   if ! (cd "$out" && git init -q && git add -A) >"$WORK/git.log" 2>&1; then
-    echo "    ❌ git init/add FAILED"; sed 's/^/        /' "$WORK/git.log" | tail -10
-    total_fail=$((total_fail + 1)); continue
+    echo "    ❌ git init/add FAILED"
+    sed 's/^/        /' "$WORK/git.log" | tail -10
+    total_fail=$((total_fail + 1))
+    continue
   fi
   # Guard against a vacuous pass: the gate (prek/reuse/hawkeye) runs on tracked files, so
   # an empty index would let every check "pass" having inspected nothing.
   if [ -z "$(cd "$out" && git diff --cached --name-only)" ]; then
     echo "    ❌ nothing staged — render/staging produced no files"
-    total_fail=$((total_fail + 1)); continue
+    total_fail=$((total_fail + 1))
+    continue
   fi
 
   # For Python shapes, materialize uv.lock the way a real generated repo does (its `_tasks`
   # run `uv sync` before the first commit) and stage it, so the gate runs against a realistic
   # tree. In particular the osv-scanner hook keys off a committed uv.lock.
   if [ -f "$out/pyproject.toml" ]; then
-    run "uv lock"          "$out" uv lock
-    run "stage uv.lock"    "$out" git add -A
+    run "uv lock" "$out" uv lock
+    run "stage uv.lock" "$out" git add -A
   fi
 
   # Always: licensing + TOML formatting (system tools; prek skips them so they run here).
-  run "reuse lint"        "$out" reuse lint
-  run "hawkeye check"     "$out" hawkeye check
+  run "reuse lint" "$out" reuse lint
+  run "hawkeye check" "$out" hawkeye check
   run "taplo fmt --check" "$out" taplo fmt --check
-  run "prek (all hooks)"  "$out" env SKIP=taplo,hawkeye-format,no-commit-to-branch uvx prek run --all-files
+  run "prek (all hooks)" "$out" env SKIP=taplo,hawkeye-format,no-commit-to-branch uvx prek run --all-files
 
   # Python checks, only if the render produced a pyproject.
   if [ -f "$out/pyproject.toml" ]; then
-    run "uv sync"             "$out" uv sync
-    run "ruff check"          "$out" uv run ruff check .
+    run "uv sync" "$out" uv sync
+    run "ruff check" "$out" uv run ruff check .
     run "ruff format --check" "$out" uv run ruff format --check .
-    run "ty check"            "$out" uv run ty check .
-    run "validate-pyproject"  "$out" uvx validate-pyproject pyproject.toml
+    run "ty check" "$out" uv run ty check .
+    run "validate-pyproject" "$out" uvx validate-pyproject pyproject.toml
     if compgen -G "$out/tests/test_*.py" >/dev/null; then
       run "pytest" "$out" uv run pytest -q
     fi

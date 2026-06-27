@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: © 2026 Tyler Nivin
+# SPDX-License-Identifier: MIT
+
+# rumdl (markdown lint/format) config. See https://github.com/rvben/rumdl.
+
+[global]
+# Don't enforce a hard line length on prose.
+disable = ["MD013"]
+# release-please owns CHANGELOG.md and regenerates it with multiple consecutive blank
+# lines (MD012) on every release PR; exclude generated changelogs from the prose linter.
+exclude = ["LICENSE", "LICENSES/**", "**/CHANGELOG.md"]
+
+[MD046]
+# Always use fenced code blocks (```lang), never 4-space-indented.
+style = "fenced"

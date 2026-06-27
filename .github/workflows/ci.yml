@@ -80,10 +80,13 @@ jobs:
       - name: Render every shape + run the full gate
         run: tests/render-matrix.sh
 
-  # Lint + security-audit the template repo's OWN workflow(s). The GENERATED workflows are
-  # covered by render-matrix (actionlint/zizmor run as prek hooks on each rendered shape);
-  # this job is the dogfood for this very file. Same pinned tools, via uvx — no Docker.
-  lint-workflows:
+  # Lint the template repo's OWN files with the same prek hooks the generated projects use
+  # (the applicable subset — see .pre-commit-config.yaml: no Python/SQL/etc. hooks here, and
+  # licensing is verified per-render by render-matrix, not at this repo's root). The
+  # GENERATED files are covered by render-matrix; this is the dogfood gate for this repo.
+  # actionlint + zizmor (offline) run as prek hooks; the online zizmor step adds the network
+  # audits (known-vulnerable-actions, ref-confusion) that the offline hook can't do.
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -92,10 +95,35 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
 
-      - name: Lint workflows (actionlint)
-        # shellcheck-py gives actionlint a shellcheck for `run:` blocks without a system install.
-        run: uvx --from actionlint-py==1.7.12.24 --with shellcheck-py actionlint
+      - name: Cache prek hook environments
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/prek
+          key: prek-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install taplo (pinned; the taplo hook is language:system)
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          # renovate: datasource=github-releases depName=tamasfe/taplo
+          curl -fsSL https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz \
+            | gunzip -c >"$HOME/.local/bin/taplo"
+          chmod +x "$HOME/.local/bin/taplo"
+          echo "$HOME/.local/bin" >>"$GITHUB_PATH"
+          # Fail loudly if the pinned release URL 404s and the pipe yielded an empty binary.
+          test -s "$HOME/.local/bin/taplo" && "$HOME/.local/bin/taplo" --version >/dev/null
+
+      - name: Run prek hooks (same as local; taplo runs as its own step below)
+        env:
+          # taplo is a system hook (its own step); no-commit-to-branch is a local-only guard.
+          SKIP: taplo,no-commit-to-branch
+        run: uvx prek run --all-files
+
+      - name: Check TOML formatting (taplo)
+        run: taplo fmt --check --diff
 
       - name: Audit workflows (zizmor — online, full coverage)
         env:

@@ -19,15 +19,33 @@ DRY_RUN=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --repo) REPO="$2"; shift 2 ;;
-    --from) FROM="$2"; shift 2 ;;
-    --dry-run) DRY_RUN=true; shift ;;
-    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  --repo)
+    REPO="$2"
+    shift 2
+    ;;
+  --from)
+    FROM="$2"
+    shift 2
+    ;;
+  --dry-run)
+    DRY_RUN=true
+    shift
+    ;;
+  *)
+    echo "unknown arg: $1" >&2
+    exit 2
+    ;;
   esac
 done
 
-command -v gh >/dev/null || { echo "gh not found" >&2; exit 1; }
-command -v jq >/dev/null || { echo "jq not found" >&2; exit 1; }
+command -v gh >/dev/null || {
+  echo "gh not found" >&2
+  exit 1
+}
+command -v jq >/dev/null || {
+  echo "jq not found" >&2
+  exit 1
+}
 
 echo "==> Target repo:  $REPO"
 echo "==> Rulesets from: $FROM"
@@ -42,7 +60,9 @@ else
   else
     # Ensure a clean main exists locally first.
     git rev-parse --verify main >/dev/null 2>&1 || {
-      echo "No local 'main' branch — commit one first." >&2; exit 1; }
+      echo "No local 'main' branch — commit one first." >&2
+      exit 1
+    }
     gh repo create "$REPO" --public --source=. --remote=origin --push
   fi
 fi
@@ -58,14 +78,14 @@ else
   for id in $ruleset_ids; do
     name="$(gh api "repos/$FROM/rulesets/$id" --jq '.name')"
     echo "==> Ruleset: $name (id $id)"
-    body="$(gh api "repos/$FROM/rulesets/$id" \
-      | jq '{name, target, enforcement, bypass_actors, conditions, rules}')"
+    body="$(gh api "repos/$FROM/rulesets/$id" |
+      jq '{name, target, enforcement, bypass_actors, conditions, rules}')"
     if $DRY_RUN; then
       echo "$body" | jq .
     else
-      echo "$body" | gh api --method POST "repos/$REPO/rulesets" --input - \
-        && echo "    created on $REPO" \
-        || echo "    FAILED (it may already exist, or reference an actor/app not on $REPO)"
+      echo "$body" | gh api --method POST "repos/$REPO/rulesets" --input - &&
+        echo "    created on $REPO" ||
+        echo "    FAILED (it may already exist, or reference an actor/app not on $REPO)"
     fi
   done
 fi

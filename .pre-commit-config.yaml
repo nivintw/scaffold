@@ -1,0 +1,151 @@
+# SPDX-FileCopyrightText: © 2026 Tyler Nivin
+# SPDX-License-Identifier: MIT
+
+# Pre-commit hooks for the scaffold template repo ITSELF, run by prek
+# (https://github.com/j178/prek). The generated projects get their own richer set from
+# template/.pre-commit-config.yaml.jinja; this is the subset that applies to THIS repo:
+#   - no Python package here → no ruff/ty/uv/validate-pyproject hooks;
+#   - no SQL/Docker/Terraform/Helm/bats → those hooks are omitted;
+#   - licensing (hawkeye/reuse) is verified PER RENDER by tests/render-matrix.sh, and reuse
+#     can't parse the template's `{{ ... }}` license placeholders, so it isn't run here.
+# Designed to run identically in CI (.github/workflows/ci.yml) — most hooks self-bootstrap.
+#   Run on demand:  uvx prek run --all-files
+#   Install hooks:  uvx prek install
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit, manual]
+
+# template/ is Copier source — its hygiene (incl. deliberate render whitespace/EOF) is
+# verified PER RENDER by tests/render-matrix.sh, which runs this very gate on each rendered
+# shape. Linting/formatting the raw .jinja here would both duplicate that and risk
+# corrupting render output (e.g. end-of-file-fixer rewriting a trailing `{% endif %}`).
+exclude: '^template/'
+
+repos:
+  # ------------------------------ 🔧 Meta / Self-checks ----------------------------- #
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+        name: "🔧 pre-commit · Check for useless excludes"
+
+  # ------------------------------- 🌳 Git Hygiene ----------------------------------- #
+  - repo: builtin
+    hooks:
+      - id: check-added-large-files
+        name: "🌳 git · Block large file commits"
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+        name: "🌳 git · Detect conflict markers"
+      - id: no-commit-to-branch
+        name: "🌳 git · Protect main (commit via a branch, then merge)"
+      - id: check-case-conflict
+        name: "🌳 git · Detect case-insensitive name clashes"
+      - id: check-shebang-scripts-are-executable
+        name: "🌳 git · Shebang scripts must be executable"
+      - id: check-executables-have-shebangs
+        name: "🌳 git · Executables must have a shebang"
+      - id: detect-private-key
+        name: "🔒 security · Block committed private keys"
+      - id: mixed-line-ending
+        name: "🧹 cleanup · Normalize line endings (LF)"
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
+        name: "🧹 cleanup · Remove trailing whitespace"
+        args: ["--markdown-linebreak-ext=md"]
+      - id: end-of-file-fixer
+        name: "🧹 cleanup · Ensure single newline at EOF"
+      - id: check-yaml
+        name: "🗂️ config · Validate YAML"
+      - id: check-json
+        name: "🗂️ config · Validate JSON"
+        files: '\.json$'
+      - id: check-toml
+        name: "🗂️ config · Validate TOML"
+
+  # -------------------------------- 🐚 Shell ---------------------------------------- #
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        name: "🐚 shell · Lint shell scripts with shellcheck"
+        args: ["-s", "bash", "-x"]
+
+  - repo: https://github.com/maxwinterstein/shfmt-py
+    rev: v4.0.0
+    hooks:
+      - id: shfmt
+        name: "🐚 shell · Format shell scripts with shfmt"
+        # -i 2 matches .editorconfig (indent_size = 2).
+        args: ["-w", "-i", "2"]
+
+  # ----------------------------- ⚙️ GitHub Actions ---------------------------------- #
+  # actionlint lints the workflows (and shellchecks their `run:` blocks); zizmor security-
+  # audits them. Both self-bootstrap a pinned env — no system binary — so they run
+  # identically locally and in CI. The online zizmor audits run separately in CI.
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.24
+    hooks:
+      - id: actionlint
+        name: "⚙️ ci · Lint workflows with actionlint"
+        additional_dependencies: ["shellcheck-py"]
+
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor
+        name: "🔒 ci · Audit workflows for security issues (zizmor)"
+        # --offline keeps the local gate deterministic and token-free; CI runs zizmor
+        # online for the network audits. Overriding args drops the default, so re-add
+        # --no-progress.
+        args: ["--no-progress", "--offline"]
+
+  # ------------------------------- 🔒 Security -------------------------------------- #
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: "🔒 security · Detect secrets with gitleaks"
+
+  # ------------------------------- ✨ Spelling -------------------------------------- #
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.47.2
+    hooks:
+      - id: typos
+        name: "✨ language · Check spelling with typos"
+        # CHECK-ONLY: drop the hook default --write-changes; keep --force-exclude.
+        args: ["--force-exclude"]
+        pass_filenames: false
+
+  # -------------------------------- 📝 Markdown ------------------------------------- #
+  - repo: https://github.com/rvben/rumdl-pre-commit
+    rev: v0.2.17
+    hooks:
+      - id: rumdl
+        name: "📝 markdown · Lint/format with rumdl"
+        args: [--fix]
+
+  # ------------------------------ ✨ Commit Messages -------------------------------- #
+  # Plain Conventional Commits (no gitmoji): release-please derives version bumps from
+  # commit types and cannot parse a leading emoji, so commits must start with the bare type.
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.16.3
+    hooks:
+      - id: commitizen
+        name: "✨ commit-msg · Enforce Conventional Commits"
+        stages: [commit-msg]
+
+  # --------------------- 🛠️ Local Tools (prek can't bootstrap) ---------------------- #
+  - repo: local
+    hooks:
+      - id: prek-validate-config
+        name: "🔧 pre-commit · Validate .pre-commit-config.yaml"
+        entry: prek validate-config
+        language: system
+        files: '^\.pre-commit-config\.yaml$'
+
+      - id: taplo
+        name: "📝 toml · Format with taplo"
+        entry: taplo format
+        language: system
+        types: [toml]
+        pass_filenames: false
