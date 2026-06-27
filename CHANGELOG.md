@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/nivintw/scaffold/compare/v1.0.2...v1.0.3) (2026-06-27)
+
+
+### Bug Fixes
+
+* Run the full zizmor audit online in generated CI ([f67502e](https://github.com/nivintw/scaffold/commit/f67502e8a288864d3b6dcd4d0fa1244a8a1131be)), closes [#27](https://github.com/nivintw/scaffold/issues/27)
+
 ## [1.0.2](https://github.com/nivintw/scaffold/compare/v1.0.1...v1.0.2) (2026-06-27)
 
 
