@@ -1,0 +1,22 @@
+{
+  // Extension recommendations for working on copier-everything itself —
+  // https://go.microsoft.com/fwlink/?LinkId=827846. Format: ${publisher}.${name}.
+  // The language-agnostic set (matching this repo's tooling) plus jinjahtml for editing
+  // the .jinja template tree. JSONC; excluded from the check-json hook.
+  "recommendations": [
+    "aaron-bond.better-comments", // color-coded comment tags (TODO/FIXME/…)
+    "gruntfuggly.todo-tree", // tree view of those tags
+    "nhoizey.gremlins", // surface invisible / zero-width characters
+    "tekumara.typos-vscode", // typo catcher (matches .config/typos.toml)
+    "tyriar.sort-lines", // sort selected lines
+    "tamasfe.even-better-toml", // TOML (copier.yml is YAML, but .config/*.toml, .cz.toml)
+    "redhat.vscode-yaml", // YAML (copier.yml, pre-commit, CI, …)
+    "editorconfig.editorconfig", // apply .editorconfig rules live
+    "vivaxy.vscode-conventional-commits", // guided conventional-commit messages
+    "rvben.rumdl", // Markdown linter/formatter (matches .config/rumdl.toml)
+    "codezombiech.gitignore", // pull canonical .gitignore templates
+    "mechatroner.rainbow-csv", // CSV column coloring
+    "samuelcolvin.jinjahtml" // Jinja syntax for the template/**/*.jinja tree
+  ],
+  "unwantedRecommendations": []
+}

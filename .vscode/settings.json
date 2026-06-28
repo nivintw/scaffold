@@ -1,0 +1,9 @@
+{
+  // VS Code workspace settings for copier-everything itself. Layers VS Code-specific
+  // behavior on top of .editorconfig, which owns indent / whitespace / final-newline
+  // hygiene. JSONC; excluded from the check-json hook. This is a template-authoring repo
+  // (no Python package), so there is no [python] block.
+  "editor.formatOnSave": true,
+  // Don't prompt for a gitmoji; commitizen handles commit messages.
+  "conventionalCommits.gitmoji": false
+}

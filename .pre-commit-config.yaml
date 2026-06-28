@@ -61,6 +61,9 @@ repos:
       - id: check-json
         name: "🗂️ config · Validate JSON"
         files: '\.json$'
+        # VS Code's .vscode/*.json are JSONC (comments + trailing commas) — valid for VS Code
+        # but not strict JSON, so check-json can't parse them. Match .vscode/ at any depth.
+        exclude: '(^|/)\.vscode/'
       - id: check-toml
         name: "🗂️ config · Validate TOML"
 

@@ -18,5 +18,10 @@ __pycache__/
 ### ship continuity files (progress tracking, never committed) ###
 /.ship/
 
+### VS Code — track only the curated workspace files, ignore personal/machine state ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
 ### macOS ###
 .DS_Store

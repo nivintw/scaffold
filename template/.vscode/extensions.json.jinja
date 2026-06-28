@@ -1,0 +1,45 @@
+{
+  // Workspace extension recommendations — https://go.microsoft.com/fwlink/?LinkId=827846
+  // Format: ${publisher}.${name}. Curated to match the tooling this project actually uses;
+  // module-specific entries are gated on the same answers that scaffold those modules.
+  // JSONC (comments + trailing commas); excluded from the check-json hook for that reason.
+  "recommendations": [
+    // Language-agnostic — useful in any project generated from this template.
+    "aaron-bond.better-comments", // color-coded comment tags (TODO/FIXME/…)
+    "gruntfuggly.todo-tree", // tree view of those tags
+    "nhoizey.gremlins", // surface invisible / zero-width characters
+    "tekumara.typos-vscode", // typo catcher (pairs with the typos hook)
+    "tyriar.sort-lines", // sort selected lines
+    "tamasfe.even-better-toml", // TOML (pyproject.toml, .config/*.toml)
+    "redhat.vscode-yaml", // YAML (pre-commit, CI, …)
+    "editorconfig.editorconfig", // apply .editorconfig rules live
+    "vivaxy.vscode-conventional-commits", // guided conventional-commit messages
+    "rvben.rumdl", // Markdown linter/formatter (matches the rumdl hook)
+    "codezombiech.gitignore", // pull canonical .gitignore templates
+    "mechatroner.rainbow-csv", // CSV column coloring
+{%- if has_python %}
+    // Python
+    "charliermarsh.ruff", // ruff lint + format
+    "ms-python.python", // Python language support
+    "njpwerner.autodocstring", // generate docstrings
+{%- endif %}
+{%- if include_sql %}
+    // SQL
+    "dorzey.vscode-sqlfluff", // sqlfluff lint/format (matches .sqlfluff)
+{%- endif %}
+{%- if include_docker %}
+    // Docker
+    "docker.docker", // Dockerfile / Compose tooling
+    "exiasr.hadolint", // Dockerfile linter (matches the hadolint hook)
+{%- endif %}
+{%- if include_terraform %}
+    // Terraform
+    "hashicorp.terraform", // Terraform language support
+{%- endif %}
+{%- if include_helm %}
+    // Kubernetes / Helm
+    "ms-kubernetes-tools.vscode-kubernetes-tools", // k8s manifests & Helm charts
+{%- endif %}
+  ],
+  "unwantedRecommendations": []
+}
