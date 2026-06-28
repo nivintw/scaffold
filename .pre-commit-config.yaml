@@ -118,7 +118,10 @@ repos:
       - id: typos
         name: "✨ language · Check spelling with typos"
         # CHECK-ONLY: drop the hook default --write-changes; keep --force-exclude.
-        args: ["--force-exclude", "--config", ".config/typos.toml"]
+        # Scan `.` plus `.config` explicitly: typos skips hidden dirs by default, so the
+        # configs relocated under .config/ go unchecked unless named (an explicit path
+        # overrides the hidden-skip). .git/.venv stay unscanned — they aren't listed.
+        args: ["--force-exclude", "--config", ".config/typos.toml", ".", ".config"]
         pass_filenames: false
 
   # --------------------------------- 📐 YAML ---------------------------------------- #
