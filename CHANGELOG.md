@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/nivintw/copier-everything/compare/v1.3.0...v1.3.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* Exclude own /compare/ URLs from lychee link-check ([f69f992](https://github.com/nivintw/copier-everything/commit/f69f992adaf95f4313b80f1be3111a28e752176f))
+
 ## [1.3.0](https://github.com/nivintw/copier-everything/compare/v1.2.0...v1.3.0) (2026-06-28)
 
 
