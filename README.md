@@ -59,7 +59,7 @@ The cross-cutting quality infrastructure, lifted from
 | **Conventional Commits + release-please** (`.cz.toml`, `.config/release-please-config.json`) | Plain Conventional Commits enforced at commit-msg time (commitizen, in `.cz.toml`); release-please derives the version + `CHANGELOG.md` from commit history and publishes via an auto-merged Release PR — continuous releases once checks pass (→ `vX.Y.Z` tag + GitHub Release). Language-agnostic — present even with no Python. |
 | **Governance files** | `CODEOWNERS`, `SECURITY.md`, `CONTRIBUTING.md`, a PR template, and YAML issue forms — every repo starts with the standard hygiene/DX baseline. |
 | **uv + ruff** (Python shapes) | When the project has Python, `pyproject.toml` hosts the ruff/ty/pytest config and a uv-managed dev environment; source shapes get a `pytest-cov` coverage gate (`--cov-fail-under`). A no-Python repo ships no `pyproject.toml`. |
-| **`.editorconfig`, `.config/typos.toml`, `.config/rumdl.toml`** | Editor + linter config that agrees with the hooks. |
+| **Editor setup** (`.editorconfig`, `.vscode/`, `.config/typos.toml`, `.config/rumdl.toml`) | Editor + linter config that agrees with the hooks. `.editorconfig` is the editor-agnostic baseline; `.vscode/{settings,extensions}.json` layer VS Code format-on-save and a recommended-extension list curated to the modules the project enables. |
 
 ## 🧩 Shape & modules
 
